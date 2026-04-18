@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= appName %></title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f5fb; color: #20232a; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+    .card { background: #fff; border-radius: 18px; box-shadow: 0 10px 30px rgba(17,24,39,.08); padding: 20px; }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    h1, h2, h3 { margin-top: 0; }
+    .muted { color: #6b7280; }
+    .pill { display: inline-block; padding: 8px 12px; border-radius: 999px; background: #111827; color: white; font-size: 12px; }
+    .ok { background: #065f46; }
+    .warn { background: #92400e; }
+    .err { background: #991b1b; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    button { background: #111827; color: white; border: 0; padding: 12px 16px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+    code, pre { background: #0f172a; color: #d1fae5; border-radius: 12px; padding: 14px; overflow: auto; display: block; }
+    .kv { line-height: 1.9; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card span-12" style="margin-bottom:18px;">
+      <h1><%= appName %></h1>
+      <p class="muted">Importador PRO para sincronizar el XML de Dreamlove con Shopify.</p>
+      <form method="post" action="/sync">
+        <button type="submit">Ejecutar sincronización ahora</button>
+      </form>
+    </div>
+
+    <div class="grid">
+      <div class="card span-4">
+        <h2>Estado</h2>
+        <p><span class="pill <%= state.running ? 'warn' : 'ok' %>"><%= state.running ? 'SINCRONIZANDO' : 'IDLE' %></span></p>
+        <div class="kv">
+          <div><strong>Última ejecución ID:</strong> <%= state.lastRunId || '—' %></div>
+          <div><strong>Inicio:</strong> <%= state.startedAt || '—' %></div>
+          <div><strong>Fin:</strong> <%= state.finishedAt || '—' %></div>
+          <div><strong>Resumen:</strong> <%= state.lastSummary || '—' %></div>
+          <div><strong>Error:</strong> <%= state.lastError || '—' %></div>
+        </div>
+      </div>
+
+      <div class="card span-4">
+        <h2>Tienda</h2>
+        <div class="kv">
+          <div><strong>Shop:</strong> <%= config.storeDomain %></div>
+          <div><strong>API:</strong> <%= config.apiVersion %></div>
+          <div><strong>Location ID:</strong> <%= config.locationId %></div>
+          <div><strong>Cron:</strong> <%= config.syncCron %></div>
+          <div><strong>Auto cron:</strong> <%= config.autoStartCron ? 'Sí' : 'No' %></div>
+        </div>
+      </div>
+
+      <div class="card span-4">
+        <h2>Reglas</h2>
+        <div class="kv">
+          <div><strong>Stock 0 si falta:</strong> <%= config.stockZeroForMissing ? 'Sí' : 'No' %></div>
+          <div><strong>Archivar si falta:</strong> <%= config.archiveMissingProducts ? 'Sí' : 'No' %></div>
+          <div><strong>XML:</strong> <span class="muted"><%= config.xmlUrl %></span></div>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <h2>Últimas ejecuciones</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Estado</th>
+              <th>Productos</th>
+              <th>Variantes</th>
+              <th>Stock</th>
+              <th>Ausentes</th>
+              <th>Errores</th>
+              <th>Resumen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% runs.forEach(run => { %>
+              <tr>
+                <td><%= run.id %></td>
+                <td><%= run.started_at %></td>
+                <td><%= run.finished_at || '—' %></td>
+                <td><%= run.status %></td>
+                <td><%= run.processed_products %></td>
+                <td><%= run.processed_variants %></td>
+                <td><%= run.inventory_updated %></td>
+                <td><%= run.missing_skus %></td>
+                <td><%= run.errors_count %></td>
+                <td><%= run.summary || '—' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card span-12">
+        <h2>Últimos logs</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Nivel</th>
+              <th>Ámbito</th>
+              <th>Ref</th>
+              <th>Mensaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td><%= log.created_at %></td>
+                <td><%= log.level %></td>
+                <td><%= log.scope || '—' %></td>
+                <td><%= log.ref || '—' %></td>
+                <td><%= log.message %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
