@@ -2,6 +2,8 @@ name: Build Android APK
 on:
   push:
     branches: [build-donde-esta-mi-tren]
+  pull_request:
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
