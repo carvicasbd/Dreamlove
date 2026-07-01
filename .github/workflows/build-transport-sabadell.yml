@@ -1,0 +1,33 @@
+name: Build Sabadell Transport Live APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'transport-sabadell-app/**'
+      - '.github/workflows/build-transport-sabadell.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: transport-sabadell-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build debug APK
+        run: gradle :app:assembleDebug --stacktrace
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk Sabadell-Transport-Live-v1.0.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sabadell-Transport-Live-APK
+          path: transport-sabadell-app/Sabadell-Transport-Live-v1.0.apk
+          retention-days: 30
