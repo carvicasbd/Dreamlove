@@ -1,0 +1,1 @@
+# Compilación privada sin ofuscación.
