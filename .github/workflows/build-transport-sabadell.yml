@@ -2,6 +2,10 @@ name: Build Sabadell Transport Live APK
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'transport-sabadell-app/**'
+      - '.github/workflows/build-transport-sabadell.yml'
   push:
     paths:
       - 'transport-sabadell-app/**'
