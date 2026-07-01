@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = MobilityRepository(application)
+    private val repository = MemorySafeRepository(application)
     private val prefs = application.getSharedPreferences("movilidad_settings", 0)
     private val _state = MutableStateFlow(
         MobilityUiState(
@@ -32,14 +32,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val profile = _state.value.selectedProfile ?: return
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, message = "Actualizando fuentes oficiales…")
-            val (items, sources) = repository.load(profile, _state.value.demoMode)
-            val active = sources.count { it.active }
-            _state.value = _state.value.copy(
-                items = items,
-                sources = sources,
-                loading = false,
-                message = if (items.isEmpty()) "No hay datos cartográficos disponibles ahora" else "$active fuentes activas · ${items.size} elementos"
-            )
+            try {
+                val (items, sources) = repository.load(profile, _state.value.demoMode)
+                val active = sources.count { it.active }
+                _state.value = _state.value.copy(
+                    items = items,
+                    sources = sources,
+                    loading = false,
+                    message = if (items.isEmpty()) "No hay datos cartográficos disponibles ahora" else "$active fuentes activas · ${items.size} elementos"
+                )
+            } catch (error: Exception) {
+                _state.value = _state.value.copy(
+                    loading = false,
+                    message = "No se han podido actualizar los datos. La aplicación sigue disponible."
+                )
+            }
         }
     }
 
