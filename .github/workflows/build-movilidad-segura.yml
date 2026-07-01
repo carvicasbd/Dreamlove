@@ -1,0 +1,25 @@
+name: Build Movilidad Segura APK
+on:
+  push:
+    branches: [build-movilidad-segura]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - run: cd movilidad-segura && gradle clean assembleDebug assembleRelease --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MovilidadSeguraEspana-apks
+          path: |
+            movilidad-segura/app/build/outputs/apk/debug/app-debug.apk
+            movilidad-segura/app/build/outputs/apk/release/app-release.apk
