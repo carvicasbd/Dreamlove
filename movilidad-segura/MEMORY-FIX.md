@@ -1,0 +1,1 @@
+Version 1.0.1: los feeds DATEX II de gran tamaño se procesan mediante XmlPullParser directamente desde el flujo de red. Se evita readText(), se serializan las descargas pesadas y se limita a 5.000 el número de elementos conservados por feed.
