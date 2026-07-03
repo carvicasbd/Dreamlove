@@ -7,13 +7,10 @@ on:
     paths:
       - '.build/velocimetro-altimetro-offline.zip.b64'
       - '.github/workflows/build-velocimetro-offline.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - '.build/velocimetro-altimetro-offline.zip.b64'
-      - '.github/workflows/build-velocimetro-offline.yml'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -45,7 +42,17 @@ jobs:
         run: gradle :app:assembleDebug --no-daemon --stacktrace
 
       - name: Prepare APK
-        run: cp /tmp/velocimetro-src/velocimetro-altimetro-offline/app/build/outputs/apk/debug/app-debug.apk dist/Velocimetro_Altimetro_Carles_Offline.apk
+        run: |
+          cp /tmp/velocimetro-src/velocimetro-altimetro-offline/app/build/outputs/apk/debug/app-debug.apk dist/Velocimetro_Altimetro_Carles_Offline.apk
+          base64 -w0 dist/Velocimetro_Altimetro_Carles_Offline.apk > dist/Velocimetro_Altimetro_Carles_Offline.apk.b64
+
+      - name: Publish compiled APK payload
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/Velocimetro_Altimetro_Carles_Offline.apk.b64
+          git commit -m "Publish compiled offline speedometer APK" || exit 0
+          git push
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
