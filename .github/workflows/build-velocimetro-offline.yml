@@ -3,6 +3,7 @@ name: Build Velocimetro Offline APK
 on:
   push:
     branches:
+      - main
       - build/velocimetro-altimetro-offline
     paths:
       - '.build/velocimetro-altimetro-offline.zip.b64'
@@ -33,17 +34,19 @@ jobs:
 
       - name: Restore Android project
         run: |
-          mkdir -p /tmp/velocimetro-src dist
-          base64 -d .build/velocimetro-altimetro-offline.zip.b64 > /tmp/velocimetro.zip
-          unzip -q /tmp/velocimetro.zip -d /tmp/velocimetro-src
+          rm -rf generated dist
+          mkdir -p generated dist
+          base64 -d .build/velocimetro-altimetro-offline.zip.b64 > generated/velocimetro.zip
+          unzip -q generated/velocimetro.zip -d generated
 
       - name: Build installable APK
-        working-directory: /tmp/velocimetro-src/velocimetro-altimetro-offline
-        run: gradle :app:assembleDebug --no-daemon --stacktrace
+        run: |
+          cd generated/velocimetro-altimetro-offline
+          gradle :app:assembleDebug --no-daemon --stacktrace
 
       - name: Prepare APK
         run: |
-          cp /tmp/velocimetro-src/velocimetro-altimetro-offline/app/build/outputs/apk/debug/app-debug.apk dist/Velocimetro_Altimetro_Carles_Offline.apk
+          cp generated/velocimetro-altimetro-offline/app/build/outputs/apk/debug/app-debug.apk dist/Velocimetro_Altimetro_Carles_Offline.apk
           base64 -w0 dist/Velocimetro_Altimetro_Carles_Offline.apk > dist/Velocimetro_Altimetro_Carles_Offline.apk.b64
 
       - name: Publish compiled APK payload
