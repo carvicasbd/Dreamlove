@@ -8,6 +8,13 @@ on:
     paths:
       - '.build/velocimetro-altimetro-offline.zip.b64'
       - '.github/workflows/build-velocimetro-offline.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.build/pr-apk-trigger.txt'
+      - '.build/velocimetro-altimetro-offline.zip.b64'
+      - '.github/workflows/build-velocimetro-offline.yml'
   workflow_dispatch:
 
 permissions:
@@ -50,6 +57,7 @@ jobs:
           base64 dist/Velocimetro_Altimetro_Carles_Offline.apk > dist/Velocimetro_Altimetro_Carles_Offline.apk.b64
 
       - name: Publish compiled APK payload
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
