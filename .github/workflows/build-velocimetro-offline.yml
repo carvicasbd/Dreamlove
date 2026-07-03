@@ -7,6 +7,12 @@ on:
     paths:
       - '.build/velocimetro-altimetro-offline.zip.b64'
       - '.github/workflows/build-velocimetro-offline.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.build/velocimetro-altimetro-offline.zip.b64'
+      - '.github/workflows/build-velocimetro-offline.yml'
   workflow_dispatch:
 
 jobs:
