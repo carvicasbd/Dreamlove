@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 final class BridgeClient {
-    private static final String BRIDGE = "https://anuncioslimpieza.es/android-demand-bridge.php";
+    private static final String BRIDGE = "https://anuncioslimpieza.es/android-offer-bridge.php";
     private final String token;
     private final String userAgent;
 
@@ -36,7 +36,6 @@ final class BridgeClient {
             c.setRequestMethod("POST"); c.setDoOutput(true);
             c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
             c.setRequestProperty("Accept", "application/json");
-            if (!userAgent.isEmpty()) c.setRequestProperty("User-Agent", userAgent);
             c.setRequestProperty("X-AL-Bridge-Token", token);
             byte[] body = payload.toString().getBytes(StandardCharsets.UTF_8);
             c.setFixedLengthStreamingMode(body.length);
@@ -61,7 +60,7 @@ final class BridgeClient {
         Photo p = downloadPhoto(imageUrl, referer);
         if (p == null) return null;
         JSONObject req = new JSONObject()
-                .put("action", "photo").put("kind", "demand")
+                .put("action", "photo").put("kind", "offer")
                 .put("import_id", importId).put("source_url", imageUrl)
                 .put("mime_type", p.mime)
                 .put("data_base64", Base64.encodeToString(p.bytes, Base64.NO_WRAP));
