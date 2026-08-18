@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 final class BridgeClient {
-    private static final String BRIDGE = "https://anuncioslimpieza.es/?al_android_bridge=1";
+    private static final String BRIDGE = "https://anuncioslimpieza.es/android-demand-bridge.php";
     private final String token;
     private final String userAgent;
 
