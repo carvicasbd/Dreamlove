@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - anuncioslimpieza-android-demandas
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
