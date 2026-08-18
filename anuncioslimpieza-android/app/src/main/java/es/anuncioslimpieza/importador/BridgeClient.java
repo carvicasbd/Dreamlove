@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 final class BridgeClient {
-    private static final String BRIDGE = "https://anuncioslimpieza.es/bridge/milanuncios";
+    private static final String BRIDGE = "https://anuncioslimpieza.es/?al_android_bridge=1";
     private final String token;
     private final String userAgent;
 
@@ -36,6 +36,7 @@ final class BridgeClient {
             c.setRequestMethod("POST"); c.setDoOutput(true);
             c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
             c.setRequestProperty("Accept", "application/json");
+            if (!userAgent.isEmpty()) c.setRequestProperty("User-Agent", userAgent);
             c.setRequestProperty("X-AL-Bridge-Token", token);
             byte[] body = payload.toString().getBytes(StandardCharsets.UTF_8);
             c.setFixedLengthStreamingMode(body.length);
@@ -45,7 +46,11 @@ final class BridgeClient {
             String text = readAll(in);
             JSONObject json;
             try { json = new JSONObject(text); }
-            catch (JSONException e) { throw new Exception("Respuesta no válida del portal (HTTP " + code + ")"); }
+            catch (JSONException e) {
+                String sample = text == null ? "" : text.replaceAll("\\s+", " ").trim();
+                if (sample.length() > 90) sample = sample.substring(0, 90) + "…";
+                throw new Exception("Respuesta no JSON del portal (HTTP " + code + ")" + (sample.isEmpty() ? "" : ": " + sample));
+            }
             if (code < 200 || code >= 300 || !json.optBoolean("ok", false))
                 throw new Exception(json.optString("error", "HTTP " + code));
             return json;
