@@ -21,7 +21,7 @@ javascript:(async function(){
     body=norm(document.body?.innerText||'');
     if(challengeRx.test(body)){AndroidBridge.onCaptcha();return;}
 
-    const serviceRx=/limpiez|hogar|dom[eé]stic|interna|externa|cuidad|mayor|niñ|plancha|cocina|emplead|trabajo|ofrezco|busco|servicio/i;
+    const serviceRx=/limpiez|hogar|dom[eé]stic|interna|externa|cuidad|mayor|niñ|plancha|cocina|emplead(?:a|o)?\s+de\s+hogar|asistent|ayuda\s+a\s+domicilio|casas?|pisos?|oficinas?|comunidades?/i;
     const seekerRx=/busco\s+(?:empleo|trabajo)|buscando\s+(?:empleo|trabajo)|me\s+ofrezco|se\s+ofrece|ofrezco\s+mis\s+servicios|busco\s+trabajar|disponible\s+para\s+trabajar|realizo\s+(?:trabajos|servicios)|trabajo\s+por\s+horas/i;
     const navRx=/^(milanuncios|servicio dom[eé]stico|ofertas de empleo|buscar|filtros?|ordenar|iniciar sesi[oó]n|entra en tu cuenta|publicar anuncio|lo m[aá]s buscado)$/i;
     const phones=s=>[...new Set([...String(s||'').matchAll(/(?<!\d)(?:\+34[\s.-]*)?(?:[6789]\d{2})(?:[\s.-]*\d{3}){2}(?!\d)/g)].map(m=>m[0].replace(/\s+/g,' ').trim()))];
@@ -38,11 +38,22 @@ javascript:(async function(){
     const records=[];const seen=new Set();
     const push=r=>{r.title=norm(r.title);r.description=norm(r.description);r.visible_text=norm(r.visible_text||r.description);if(r.title.length<3||r.title.length>190||navRx.test(r.title))return;if(r.description.length<18&&!serviceRx.test(r.title))return;const h=r.title+' '+r.description;if(!serviceRx.test(h)||!seekerRx.test(h))return;const loc=locate(r.visible_text);r.city=norm(r.city||loc.city);r.province=norm(r.province||loc.province);r.phones=[...new Set([...(r.phones||[]),...phones(r.visible_text)])];r.images=[...new Set(r.images||[])].slice(0,5);r.url=r.url||page;r.date=r.date||dateText(r.visible_text);r.price=r.price||priceText(r.visible_text);const stable=r.description.replace(/Hace\s+\d+\s+(?:min(?:uto)?s?|h(?:ora)?s?|d[ií]as?|semanas?|meses?)|\bHoy\b|\bAyer\b|\bDestacado\b|\bNuevo\b/gi,' ').replace(/\s+/g,' ').trim();r.card_key=norm(r.card_key||[r.title,r.city,r.province,r.phones[0]||'',stable.slice(0,700)].join('|')).slice(0,1600);const k=lower(r.card_key);if(seen.has(k))return;seen.add(k);records.push(r);};
 
-    const selectors=['article','[data-testid*="ad-card" i]','[data-testid*="listing" i]','[data-testid*="result" i]','[class*="adcard" i]','[class*="ad-card" i]','[class*="listing-card" i]','[class*="result-card" i]','[class*="ad-item" i]','[class*="listing-item" i]','li'];
+    const selectors=['article','[data-testid*="ad-card" i]','[data-testid*="listing-card" i]','[data-testid*="result-card" i]','[class*="adcard" i]','[class*="ad-card" i]','[class*="listing-card" i]','[class*="result-card" i]','[class*="ad-item" i]','[class*="listing-item" i]'];
     const els=[];for(const s of selectors){for(const e of document.querySelectorAll(s)){if(!els.includes(e))els.push(e);}}
-    for(const el of els){const t=norm(el.innerText||el.textContent||'');if(t.length<28||t.length>5000||!serviceRx.test(t)||!seekerRx.test(t))continue;const title=titleFrom(el);if(!title)continue;const imgs=imageUrls(el);const shape=imgs.length||/\([^\n()]{2,45}\)/.test(t)||/Hace\s+\d+|Hoy|Ayer|Destacado|Nuevo/i.test(t);if(!shape)continue;push({url:linkFrom(el),title,description:t,visible_text:t,images:imgs,phones:phones(t)});}
+    const dateMarkRx=/(?:Hace\s+\d+\s+(?:min(?:uto)?s?|h(?:ora)?s?|d[ií]as?|semanas?|meses?)|\bHoy\b|\bAyer\b|\bDestacado\b|\bNuevo\b)/gi;
+    const cardLooksAtomic=(el,t)=>{
+      if(!el||t.length<28||t.length>2400)return false;
+      const marks=t.match(dateMarkRx)||[];
+      if(marks.length>1)return false;
+      const heads=[...el.querySelectorAll?.('h2,h3,h4,[role="heading"],[data-testid*="title" i]')||[]].filter(x=>{const z=norm(x.innerText||x.textContent||'');return z.length>=3&&z.length<=190&&!navRx.test(z);});
+      if(heads.length>2)return false;
+      const adLinks=[...(el.querySelectorAll?.('a[href]')||[])].filter(a=>{try{return /\.htm$/i.test(new URL(a.href,location.href).pathname);}catch{return false;}});
+      if(adLinks.length>2)return false;
+      return true;
+    };
+    for(const el of els){const t=norm(el.innerText||el.textContent||'');if(!cardLooksAtomic(el,t)||!serviceRx.test(t)||!seekerRx.test(t))continue;const title=titleFrom(el);if(!title||!serviceRx.test(title+' '+t))continue;const imgs=imageUrls(el);const shape=imgs.length||/\([^\n()]{2,45}\)/.test(t)||/Hace\s+\d+|Hoy|Ayer|Destacado|Nuevo/i.test(t);if(!shape)continue;push({url:linkFrom(el),title,description:t,visible_text:t,images:imgs,phones:phones(t)});}
 
-    for(const h of document.querySelectorAll('h2,h3,h4,[role="heading"]')){const title=norm(h.innerText||h.textContent||'');if(title.length<3||title.length>190||navRx.test(title))continue;let el=h.parentElement,best=null;for(let i=0;i<6&&el&&el!==document.body;i++,el=el.parentElement){const t=norm(el.innerText||el.textContent||'');if(t.length>=35&&t.length<=3600&&serviceRx.test(t)&&seekerRx.test(t)){best=el;if(imageUrls(el).length||/Hace\s+\d+|Hoy|Ayer|\([^\n()]{2,45}\)/i.test(t))break;}}if(best){const t=norm(best.innerText||best.textContent||'');push({url:linkFrom(best),title,description:t,visible_text:t,images:imageUrls(best),phones:phones(t)});}}
+    for(const h of document.querySelectorAll('h2,h3,h4,[role="heading"]')){const title=norm(h.innerText||h.textContent||'');if(title.length<3||title.length>190||navRx.test(title))continue;let el=h.parentElement,best=null;for(let i=0;i<5&&el&&el!==document.body;i++,el=el.parentElement){const t=norm(el.innerText||el.textContent||'');if(!cardLooksAtomic(el,t))continue;if(t.length>=35&&serviceRx.test(title+' '+t)&&seekerRx.test(title+' '+t)){best=el;break;}}if(best){const t=norm(best.innerText||best.textContent||'');push({url:linkFrom(best),title,description:t,visible_text:t,images:imageUrls(best),phones:phones(t)});}}
 
     const diagnostics={bodyChars:body.length,domCandidates:els.length,headings:document.querySelectorAll('h2,h3,h4,[role="heading"]').length,challenge:false,url:page};
     AndroidBridge.onExtract(JSON.stringify({records,diagnostics}));
