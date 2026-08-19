@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 final class BridgeClient {
-    private static final String BRIDGE = "https://anuncioslimpieza.es/android-offer-bridge.php";
+    private static final String BRIDGE = "https://anuncioslimpieza.es/android-demand-bridge.php";
     private final String token;
     private final String userAgent;
 
@@ -45,11 +45,7 @@ final class BridgeClient {
             String text = readAll(in);
             JSONObject json;
             try { json = new JSONObject(text); }
-            catch (JSONException e) {
-                String sample = text == null ? "" : text.replaceAll("\\s+", " ").trim();
-                if (sample.length() > 90) sample = sample.substring(0, 90) + "…";
-                throw new Exception("Respuesta no JSON del portal (HTTP " + code + ")" + (sample.isEmpty() ? "" : ": " + sample));
-            }
+            catch (JSONException e) { throw new Exception("Respuesta no válida del portal (HTTP " + code + ")"); }
             if (code < 200 || code >= 300 || !json.optBoolean("ok", false))
                 throw new Exception(json.optString("error", "HTTP " + code));
             return json;
@@ -60,7 +56,7 @@ final class BridgeClient {
         Photo p = downloadPhoto(imageUrl, referer);
         if (p == null) return null;
         JSONObject req = new JSONObject()
-                .put("action", "photo").put("kind", "offer")
+                .put("action", "photo").put("kind", "demand")
                 .put("import_id", importId).put("source_url", imageUrl)
                 .put("mime_type", p.mime)
                 .put("data_base64", Base64.encodeToString(p.bytes, Base64.NO_WRAP));
